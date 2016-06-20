@@ -37,6 +37,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -266,12 +267,22 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   private int getCurrentOrientation() {
     int rotation = getWindowManager().getDefaultDisplay().getRotation();
-    switch (rotation) {
-      case Surface.ROTATION_0:
-      case Surface.ROTATION_90:
-        return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
-      default:
-        return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+      switch (rotation) {
+        case Surface.ROTATION_0:
+        case Surface.ROTATION_90:
+          return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+        default:
+          return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+      }
+    } else {
+      switch (rotation) {
+        case Surface.ROTATION_0:
+        case Surface.ROTATION_270:
+          return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        default:
+          return ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+      }
     }
   }
   
@@ -377,13 +388,11 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-    if (resultCode == RESULT_OK) {
-      if (requestCode == HISTORY_REQUEST_CODE) {
-        int itemNumber = intent.getIntExtra(Intents.History.ITEM_NUMBER, -1);
-        if (itemNumber >= 0) {
-          HistoryItem historyItem = historyManager.buildHistoryItem(itemNumber);
-          decodeOrStoreSavedBitmap(null, historyItem.getResult());
-        }
+    if (resultCode == RESULT_OK && requestCode == HISTORY_REQUEST_CODE && historyManager != null) {
+      int itemNumber = intent.getIntExtra(Intents.History.ITEM_NUMBER, -1);
+      if (itemNumber >= 0) {
+        HistoryItem historyItem = historyManager.buildHistoryItem(itemNumber);
+        decodeOrStoreSavedBitmap(null, historyItem.getResult());
       }
     }
   }
